@@ -4,10 +4,10 @@
 from setuptools import find_packages, setup
 
 setup(name='denonavr',
-      version='0.5.5',
+      version='0.5.5+griegers',
       description='Automation Library for Denon AVR receivers',
       long_description='Automation Library for Denon AVR receivers',
-      url='https://github.com/scarface-4711/denonavr',
+      url='https://github.com/jgrieger1/denonavr@AVR4310',
       author='Oliver Goetz',
       author_email='scarface@mywoh.de',
       license='MIT',
