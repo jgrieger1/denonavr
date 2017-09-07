@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger("DenonAVR")
 DEVICEINFO_AVR_X_PATTERN = re.compile(
     r"(.*AVR-X.*|.*SR500[6-9]|.*SR60(07|08|09|10)|.*NR1604)")
 DEVICEINFO_COMMAPI_PATTERN = re.compile(r"(0210|0300)")
+DEVICEINFO_PRE2012_PATTERN = re.compile(r"Form .* is not defined")
 
 SOURCE_MAPPING = {"TV AUDIO": "TV", "iPod/USB": "USB/IPOD", "Bluetooth": "BT",
                   "Blu-ray": "BD", "CBL/SAT": "SAT/CBL", "NETWORK": "NET",
@@ -51,10 +52,12 @@ NETAUDIOSTATUS_URL = "/goform/formNetAudio_StatusXml.xml"
 TUNERSTATUS_URL = "/goform/formTuner_TunerXml.xml"
 HDTUNERSTATUS_URL = "/goform/formTuner_HdXml.xml"
 COMMAND_NETAUDIO_POST_URL = "/NetAudio/index.put.asp"
-
+COMMAND_POST_URL = "/MainZone/index.put.asp"
+CHECK_PRE2012_URL = "/goform/formiPhoneAppDirect.xml"
 
 # Main Zone URLs
 STATUS_URL = "/goform/formMainZone_MainZoneXmlStatus.xml"
+STATUS_PRE2012_URL = "/goform/formMainZone_MainZoneXml.xml"
 MAINZONE_URL = "/goform/formMainZone_MainZoneXml.xml"
 COMMAND_SEL_SRC_URL = "/goform/formiPhoneAppDirect.xml?SI"
 COMMAND_FAV_SRC_URL = "/goform/formiPhoneAppDirect.xml?ZM"
@@ -65,9 +68,11 @@ COMMAND_VOLUME_DOWN_URL = "/goform/formiPhoneAppDirect.xml?MVDOWN"
 COMMAND_SET_VOLUME_URL = "/goform/formiPhoneAppVolume.xml?1+%.1f"
 COMMAND_MUTE_ON_URL = "/goform/formiPhoneAppMute.xml?1+MuteOn"
 COMMAND_MUTE_OFF_URL = "/goform/formiPhoneAppMute.xml?1+MuteOff"
+NAME_MAIN = "MAIN%20ZONE"
 
 # Zone 2 URLs
 STATUS_Z2_URL = "/goform/formZone2_Zone2XmlStatus.xml"
+STATUS_PRE2012_Z2_URL = "/goform/formMainZone_MainZoneXml.xml?ZoneName=ZONE2"
 MAINZONE_Z2_URL = None
 COMMAND_SEL_SRC_Z2_URL = "/goform/formiPhoneAppDirect.xml?Z2"
 COMMAND_FAV_SRC_Z2_URL = "/goform/formiPhoneAppDirect.xml?Z2"
@@ -78,9 +83,11 @@ COMMAND_VOLUME_DOWN_Z2_URL = "/goform/formiPhoneAppDirect.xml?Z2DOWN"
 COMMAND_SET_VOLUME_Z2_URL = "/goform/formiPhoneAppVolume.xml?2+%.1f"
 COMMAND_MUTE_ON_Z2_URL = "/goform/formiPhoneAppMute.xml?2+MuteOn"
 COMMAND_MUTE_OFF_Z2_URL = "/goform/formiPhoneAppMute.xml?2+MuteOff"
+NAME_Z2 = "ZONE2"
 
 # Zone 3 URLs
 STATUS_Z3_URL = "/goform/formZone3_Zone3XmlStatus.xml"
+STATUS_PRE2012_Z3_URL = "/goform/formMainZone_MainZoneXml.xml?ZoneName=ZONE3"
 MAINZONE_Z3_URL = None
 COMMAND_SEL_SRC_Z3_URL = "/goform/formiPhoneAppDirect.xml?Z3"
 COMMAND_FAV_SRC_Z3_URL = "/goform/formiPhoneAppDirect.xml?Z3"
@@ -91,19 +98,21 @@ COMMAND_VOLUME_DOWN_Z3_URL = "/goform/formiPhoneAppDirect.xml?Z3DOWN"
 COMMAND_SET_VOLUME_Z3_URL = "/goform/formiPhoneAppVolume.xml?3+%.1f"
 COMMAND_MUTE_ON_Z3_URL = "/goform/formiPhoneAppMute.xml?3+MuteOn"
 COMMAND_MUTE_OFF_Z3_URL = "/goform/formiPhoneAppMute.xml?3+MuteOff"
-
+NAME_Z3 = "ZONE3"
 
 ReceiverURLs = namedtuple(
-    "ReceiverURLs", ["appcommand", "status", "mainzone", "deviceinfo",
+    "ReceiverURLs", ["appcommand", "status", "status_pre2012", "mainzone", "deviceinfo",
                      "netaudiostatus", "tunerstatus", "hdtunerstatus",
                      "command_sel_src", "command_fav_src", "command_power_on",
                      "command_power_standby", "command_volume_up",
                      "command_volume_down", "command_set_volume",
                      "command_mute_on", "command_mute_off",
-                     "command_netaudio_post"])
+                     "command_netaudio_post", "command_post",
+                     "check_pre2012", "zonename"])
 
 DENONAVR_URLS = ReceiverURLs(appcommand=APPCOMMAND_URL,
                              status=STATUS_URL,
+                             status_pre2012=STATUS_PRE2012_URL,
                              mainzone=MAINZONE_URL,
                              deviceinfo=DEVICEINFO_URL,
                              netaudiostatus=NETAUDIOSTATUS_URL,
@@ -118,10 +127,14 @@ DENONAVR_URLS = ReceiverURLs(appcommand=APPCOMMAND_URL,
                              command_set_volume=COMMAND_SET_VOLUME_URL,
                              command_mute_on=COMMAND_MUTE_ON_URL,
                              command_mute_off=COMMAND_MUTE_OFF_URL,
-                             command_netaudio_post=COMMAND_NETAUDIO_POST_URL)
+                             command_netaudio_post=COMMAND_NETAUDIO_POST_URL,
+                             command_post=COMMAND_POST_URL,
+                             check_pre2012=CHECK_PRE2012_URL,
+                             zonename=NAME_MAIN)
 
 ZONE2_URLS = ReceiverURLs(appcommand=APPCOMMAND_URL,
                           status=STATUS_Z2_URL,
+                          status_pre2012=STATUS_PRE2012_Z2_URL,
                           mainzone=MAINZONE_Z2_URL,
                           deviceinfo=DEVICEINFO_URL,
                           netaudiostatus=NETAUDIOSTATUS_URL,
@@ -136,10 +149,14 @@ ZONE2_URLS = ReceiverURLs(appcommand=APPCOMMAND_URL,
                           command_set_volume=COMMAND_SET_VOLUME_Z2_URL,
                           command_mute_on=COMMAND_MUTE_ON_Z2_URL,
                           command_mute_off=COMMAND_MUTE_OFF_Z2_URL,
-                          command_netaudio_post=COMMAND_NETAUDIO_POST_URL)
+                          command_netaudio_post=COMMAND_NETAUDIO_POST_URL,
+                          command_post=COMMAND_POST_URL,
+                          check_pre2012=CHECK_PRE2012_URL,
+                          zonename=NAME_Z2)
 
 ZONE3_URLS = ReceiverURLs(appcommand=APPCOMMAND_URL,
                           status=STATUS_Z3_URL,
+                          status_pre2012=STATUS_PRE2012_Z3_URL,
                           mainzone=MAINZONE_Z3_URL,
                           deviceinfo=DEVICEINFO_URL,
                           netaudiostatus=NETAUDIOSTATUS_URL,
@@ -154,7 +171,10 @@ ZONE3_URLS = ReceiverURLs(appcommand=APPCOMMAND_URL,
                           command_set_volume=COMMAND_SET_VOLUME_Z3_URL,
                           command_mute_on=COMMAND_MUTE_ON_Z3_URL,
                           command_mute_off=COMMAND_MUTE_OFF_Z3_URL,
-                          command_netaudio_post=COMMAND_NETAUDIO_POST_URL)
+                          command_netaudio_post=COMMAND_NETAUDIO_POST_URL,
+                          command_post=COMMAND_POST_URL,
+                          check_pre2012=CHECK_PRE2012_URL,
+                          zonename=NAME_Z3)
 
 POWER_ON = "ON"
 POWER_OFF = "OFF"
@@ -203,6 +223,7 @@ class DenonAVR(object):
         # Initially assume receiver is a model like AVR-X...
         self._avr_x = True
         self._show_all_inputs = show_all_inputs
+        self._avr_pre2012 = False
         self._mute = STATE_OFF
         self._volume = "--"
         self._input_func = None
@@ -293,13 +314,41 @@ class DenonAVR(object):
         Returns "True" on success and "False" on fail.
         """
         # pylint: disable=too-many-branches,too-many-statements
+        # If input_func_list is empty, receiver type is still unknown.
+        # Try to determine receiver type first before doing anything else.
+        if not self._input_func_list:
+            if not self._update_input_func_list():
+                _LOGGER.warning((
+                    "Input function list for Denon receiver at host %s "
+                    "could not be loaded.  Receiver type cannot be "
+                    "determined."), self._host)
+                # Assume the device is off and return
+                # leaving the state to unknown
+                self._power = POWER_OFF
+                return True
+        # If name is not set yet, get it from Main Zone URL
+        if self._name is None and self._urls.mainzone is not None:
+            name_tag = {"FriendlyName": None}
+            try:
+                root = self.get_status_xml(self._urls.mainzone)
+                # Get the tags from this XML
+                name_tag = self._get_status_from_xml_tags(root, name_tag)
+            except (ValueError, requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout):
+                _LOGGER.error("Receiver name could not be determined")
+
         # Set all tags to be evaluated
-        relevant_tags = {"Power": None, "InputFuncSelect": None, "Mute": None,
+        relevant_tags = {"ZonePower": None, "InputFuncSelect": None, "Mute": None,
                          "MasterVolume": None}
 
         # Get status XML from Denon receiver via HTTP
         try:
-            root = self.get_status_xml(self._urls.status)
+            if self._avr_pre2012 is True:
+                root = self.get_status_xml(self._urls.status_pre2012)
+            else:
+                root = self.get_status_xml(self._urls.status)
+            # Get the tags from this XML
+            relevant_tags = self._get_status_from_xml_tags(root, relevant_tags)
         except ValueError:
             pass
         except requests.exceptions.RequestException:
@@ -662,11 +711,31 @@ class DenonAVR(object):
 
         # Not an AVR-X device, start determination of sources
         if self._avr_x is False:
-            # Sources list is equal to list of renamed sources.
-            non_x_sources, deleted_non_x_sources, status_success = (
-                self._get_renamed_deleted_sourcesapp())
+            # Test if receiver is pre 2012 AVR
+            try:
+                result = self.get_status_xml(self._urls.check_pre2012)
+            except ConnectionError:
+                _LOGGER.error("Connection Error: Checking for pre 2012 AVR")
+                return None
 
-            # Backup if previous try with AppCommand was not successful
+            try:
+                self._avr_pre2012 = bool(DEVICEINFO_PRE2012_PATTERN.search(
+                    result.find("./body/p").text) is not None)
+            except AttributeError:
+                # AttributeError occurs when error message HTML tag is not found.
+                # In this case the Deviceinfo.xml was found and program continues
+                # with the AVR-X source determination
+                self._avr_pre2012 = False
+                pass
+
+            if self._avr_pre2012 is False:
+                # Sources list is equal to list of renamed sources.
+                non_x_sources, deleted_non_x_sources, status_success = (
+                    self._get_renamed_deleted_sourcesapp())
+            else:
+                status_success = False
+
+            # Backup if previous try with AppCommand was not successful or AVR is pre 2012
             if not status_success:
                 non_x_sources, deleted_non_x_sources = (
                     self._get_renamed_deleted_sources())
@@ -830,7 +899,7 @@ class DenonAVR(object):
         for child in root:
             if child.tag not in relevant_tags.keys():
                 continue
-            elif child.tag == "Power":
+            elif child.tag == "ZonePower":
                 self._power = child[0].text
                 relevant_tags.pop(child.tag, None)
             elif child.tag == "InputFuncSelect":
@@ -1018,18 +1087,33 @@ class DenonAVR(object):
                 return False
         # Create command URL and send command via HTTP GET
         try:
-            if linp in self._favorite_func_list:
-                command_url = self._urls.command_fav_src + linp
+            if self._avr_pre2012 is True:
+                """via HTTP post command."""
+                body = {"cmd0": "PutZone_InputFunction/" + linp,
+                        "cmd1": "aspMainZone_WebUpdateStatus/",
+                        "ZoneName": self._urls.zonename}
+                try:
+                    if self.send_post_command(self._urls.command_post, body):
+                        self._input_func = input_func
+                        return True
+                    else:
+                        return False
+                except ConnectionError:
+                    return False
             else:
-                command_url = self._urls.command_sel_src + linp
+                """via HTTP get command."""
+                if linp in self._favorite_func_list:
+                    command_url = self._urls.command_fav_src + linp
+                else:
+                    command_url = self._urls.command_sel_src + linp
 
-            if self.send_get_command(command_url):
-                self._input_func = input_func
-                return True
-            else:
-                return False
+                if self.send_get_command(command_url):
+                    self._input_func = input_func
+                    return True
+                else:
+                    return False
         except requests.exceptions.RequestException:
-            _LOGGER.error("Connection error: input function %s not set.",
+            _LOGGER.error("Connection error: input function %s not set",
                           input_func)
             return False
 
@@ -1048,7 +1132,7 @@ class DenonAVR(object):
         if self._input_func in self._netaudio_func_list:
             body = {"cmd0": "PutNetAudioCommand/CurEnter",
                     "cmd1": "aspMainZone_WebUpdateStatus/",
-                    "ZoneName": "MAIN ZONE"}
+                    "ZoneName": self._urls.zonename}
             try:
                 if self.send_post_command(
                         self._urls.command_netaudio_post, body):
@@ -1066,7 +1150,7 @@ class DenonAVR(object):
         if self._input_func in self._netaudio_func_list:
             body = {"cmd0": "PutNetAudioCommand/CurEnter",
                     "cmd1": "aspMainZone_WebUpdateStatus/",
-                    "ZoneName": "MAIN ZONE"}
+                    "ZoneName": self._urls.zonename}
             try:
                 if self.send_post_command(
                         self._urls.command_netaudio_post, body):
@@ -1084,7 +1168,7 @@ class DenonAVR(object):
         if self._input_func in self._netaudio_func_list:
             body = {"cmd0": "PutNetAudioCommand/CurUp",
                     "cmd1": "aspMainZone_WebUpdateStatus/",
-                    "ZoneName": "MAIN ZONE"}
+                    "ZoneName": self._urls.zonename}
             try:
                 return bool(self.send_post_command(
                     self._urls.command_netaudio_post, body))
@@ -1099,7 +1183,7 @@ class DenonAVR(object):
         if self._input_func in self._netaudio_func_list:
             body = {"cmd0": "PutNetAudioCommand/CurDown",
                     "cmd1": "aspMainZone_WebUpdateStatus/",
-                    "ZoneName": "MAIN ZONE"}
+                    "ZoneName": self._urls.zonename}
             try:
                 return bool(self.send_post_command(
                     self._urls.command_netaudio_post, body))
@@ -1108,51 +1192,96 @@ class DenonAVR(object):
                 return False
 
     def power_on(self):
-        """Turn off receiver via HTTP get command."""
         try:
-            if self.send_get_command(self._urls.command_power_on):
-                self._power = POWER_ON
-                self._state = STATE_ON
-                return True
+            if self._avr_pre2012 is True:
+                """Turn on receiver via HTTP post command."""
+                if self._zone == "Main":
+                    body = {"cmd0": "PutSystem_OnStandby/ON",
+                            "cmd1": "aspMainZone_WebUpdateStatus/",
+                            "ZoneName": self._urls.zonename}
+                else:
+                    body = {"cmd0": "PutZone_OnOff/ON",
+                            "cmd1": "aspMainZone_WebUpdateStatus/",
+                            "ZoneName": self._urls.zonename}
+                if self.send_post_command(self._urls.command_post, body):
+                    self._power = POWER_ON
+                    self._state = STATE_ON
+                    return True
+                else:
+                    return False
             else:
-                return False
+                """Turn on receiver via HTTP get command."""
+                if self.send_get_command(self._urls.command_power_on):
+                    self._power = POWER_ON
+                    self._state = STATE_ON
+                    return True
+                else:
+                    return False
         except requests.exceptions.RequestException:
-            _LOGGER.error("Connection error: power on command not sent.")
+            _LOGGER.error("Connection error: power on command not sent")
             return False
 
     def power_off(self):
-        """Turn off receiver via HTTP get command."""
         try:
-            if self.send_get_command(self._urls.command_power_standby):
-                self._power = POWER_STANDBY
-                self._state = STATE_OFF
-                return True
+            if self._avr_pre2012 is True:
+                """Turn off receiver via HTTP post command."""
+                if self._zone == "Main":
+                    body = {"cmd0": "PutSystem_OnStandby/STANDBY",
+                            "cmd1": "aspMainZone_WebUpdateStatus/",
+                            "ZoneName": self._urls.zonename}
+                else:
+                    body = {"cmd0": "PutZone_OnOff/OFF",
+                            "cmd1": "aspMainZone_WebUpdateStatus/",
+                            "ZoneName": self._urls.zonename}
+                if self.send_post_command(self._urls.command_post, body):
+                    self._power = POWER_STANDBY
+                    self._state = STATE_OFF
+                    return True
+                else:
+                    return False
             else:
-                return False
+                """Turn off receiver via HTTP get command."""
+                if self.send_get_command(self._urls.command_power_standby):
+                    self._power = POWER_STANDBY
+                    self._state = STATE_OFF
+                    return True
+                else:
+                    return False
         except requests.exceptions.RequestException:
-            _LOGGER.error("Connection error: power off command not sent.")
+            _LOGGER.error("Connection error: power off command not sent")
             return False
 
     def volume_up(self):
-        """Volume up receiver via HTTP get command."""
         try:
-            return bool(self.send_get_command(self._urls.command_volume_up))
+            if self._avr_pre2012 is True:
+                """Volume up receiver via HTTP post command."""
+                body = {"cmd0": "PutMasterVolumeBtn/>",
+                        "ZoneName": self._urls.zonename}
+                return bool(self.send_post_command(self._urls.command_post, body))
+            else:
+                """Volume up receiver via HTTP get command."""
+                return bool(self.send_get_command(self._urls.command_volume_up))
         except requests.exceptions.RequestException:
-            _LOGGER.error("Connection error: volume up command not sent.")
+            _LOGGER.error("Connection error: volume up command not sent")
             return False
 
     def volume_down(self):
-        """Volume down receiver via HTTP get command."""
         try:
-            return bool(self.send_get_command(self._urls.command_volume_down))
+            if self._avr_pre2012 is True:
+                """Volume down receiver via HTTP post command."""
+                body = {"cmd0": "PutMasterVolumeBtn/<",
+                        "ZoneName": self._urls.zonename}
+                return bool(self.send_post_command(self._urls.command_post, body))
+            else:
+                """Volume down receiver via HTTP get command."""
+                return bool(self.send_get_command(self._urls.command_volume_down))
         except requests.exceptions.RequestException:
-            _LOGGER.error("Connection error: volume down command not sent.")
+            _LOGGER.error("Connection error: volume down command not sent")
             return False
 
     def set_volume(self, volume):
         """
-        Set receiver volume via HTTP get command.
-
+        Set receiver volume.
         Volume is send in a format like -50.0.
         Minimum is -80.0, maximum at 18.0
         """
@@ -1160,31 +1289,65 @@ class DenonAVR(object):
             raise ValueError("Invalid volume")
 
         try:
-            return bool(self.send_get_command(
-                self._urls.command_set_volume % volume))
+            if self._avr_pre2012 is True:
+                """Set receiver volume via HTTP post command."""
+                body = {"cmd0": "PutMasterVolumeSet/" + str(volume),
+                        "ZoneName": self._urls.zonename}
+                return bool(self.send_post_command(
+                    self._urls.command_post, body))
+            else:
+                """Set receiver volume via HTTP get command."""
+                return bool(self.send_get_command(
+                    self._urls.command_set_volume % volume))
         except requests.exceptions.RequestException:
-            _LOGGER.error("Connection error: set volume command not sent.")
+            _LOGGER.error("Connection error: set volume command not sent")
             return False
+
 
     def mute(self, mute):
-        """Mute receiver via HTTP get command."""
         try:
             if mute:
-                if self.send_get_command(self._urls.command_mute_on):
-                    self._mute = STATE_ON
-                    return True
+                if self._avr_pre2012 is True:
+                    """Mute receiver via HTTP post command."""
+                    body = {"cmd0": "PutVolumeMute/on",
+                            "cmd1": "aspMainZone_WebUpdateStatus/",
+                            "ZoneName": self._urls.zonename}
+                    if bool(self.send_post_command(self._urls.command_post, body)):
+                        self._mute = STATE_ON
+                        return True
+                    else:
+                        return False
                 else:
-                    return False
+                    """Mute receiver via HTTP get command."""
+                    if self.send_get_command(self._urls.command_mute_on):
+                        self._mute = STATE_ON
+                        return True
+                    else:
+                        return False
             else:
-                if self.send_get_command(self._urls.command_mute_off):
-                    self._mute = STATE_OFF
-                    return True
+                if self._avr_pre2012 is True:
+                    """Un-Mute receiver via HTTP post command."""
+                    body = {"cmd0": "PutVolumeMute/off",
+                            "cmd1": "aspMainZone_WebUpdateStatus/",
+                            "ZoneName": self._urls.zonename}
+                    try:
+                        if bool(self.send_post_command(self._urls.command_post, body)):
+                            self._mute = STATE_OFF
+                            return True
+                        else:
+                            return False
+                    except ConnectionError:
+                        return False
                 else:
-                    return False
-        except requests.exceptions.RequestException:
-            _LOGGER.error("Connection error: mute command not sent.")
-            return False
+                    if self.send_get_command(self._urls.command_mute_off):
+                        self._mute = STATE_OFF
+                        return True
+                    else:
+                        return False
 
+        except requests.exceptions.RequestException:
+            _LOGGER.error("Connection error: mute command not sent")
+            return False
 
 class DenonAVRZones(DenonAVR):
     """Representing an additional zone of a Denon AVR Device."""
@@ -1221,6 +1384,7 @@ class DenonAVRZones(DenonAVR):
         self.timeout = self._parent_avr.timeout
         # Initially assume receiver is a model like AVR-X...
         self._avr_x = self._parent_avr._avr_x
+        self._avr_pre2012 = self._parent_avr._avr_pre2012
         self._show_all_inputs = self._parent_avr._show_all_inputs
         self._mute = STATE_OFF
         self._volume = "--"
