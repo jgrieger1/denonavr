@@ -234,6 +234,7 @@ class DenonAVR(object):
         self._favorite_func_list = []
         self._state = None
         self._power = None
+        self._master_power = None
         self._image_url = (STATIC_ALBUM_URL.format(host=self._host))
         self._title = None
         self._artist = None
@@ -338,7 +339,7 @@ class DenonAVR(object):
                 _LOGGER.error("Receiver name could not be determined")
 
         # Set all tags to be evaluated
-        relevant_tags = {"ZonePower": None, "InputFuncSelect": None, "Mute": None,
+        relevant_tags = {"Power": None, "ZonePower": None, "InputFuncSelect": None, "Mute": None,
                          "MasterVolume": None}
 
         # Get status XML from Denon receiver via HTTP
@@ -354,6 +355,7 @@ class DenonAVR(object):
         except requests.exceptions.RequestException:
             # On timeout and connection error, the device is probably off
             self._power = POWER_OFF
+            self._master_power = POWER_OFF            
         else:
             # Get the tags from this XML
             relevant_tags = self._get_status_from_xml_tags(root, relevant_tags)
@@ -899,6 +901,9 @@ class DenonAVR(object):
         for child in root:
             if child.tag not in relevant_tags.keys():
                 continue
+            elif child.tag == "Power":
+                self._master_power = child[0].text
+                relevant_tags.pop(child.tag, None)
             elif child.tag == "ZonePower":
                 self._power = child[0].text
                 relevant_tags.pop(child.tag, None)
@@ -911,8 +916,7 @@ class DenonAVR(object):
                         _LOGGER.error(
                             "No mapping for source %s", inputfunc)
                         self._input_func = inputfunc
-                    finally:
-                        relevant_tags.pop(child.tag, None)
+                relevant_tags.pop(child.tag, None)
             elif child.tag == "MasterVolume":
                 self._volume = child[0].text
                 relevant_tags.pop(child.tag, None)
@@ -948,11 +952,20 @@ class DenonAVR(object):
     @property
     def power(self):
         """
-        Return the power state of the device.
+        Return the power state of the zone.
 
         Possible values are: "ON", "STANDBY" and "OFF"
         """
         return self._power
+
+    @property
+    def master_power(self):
+        """
+        Return the power state of the device.
+
+        Possible values are: "ON", "STANDBY" and "OFF"
+        """
+        return self._master_power
 
     @property
     def state(self):
@@ -1195,14 +1208,9 @@ class DenonAVR(object):
         try:
             if self._avr_pre2012 is True:
                 """Turn on receiver via HTTP post command."""
-                if self._zone == "Main":
-                    body = {"cmd0": "PutSystem_OnStandby/ON",
-                            "cmd1": "aspMainZone_WebUpdateStatus/",
-                            "ZoneName": self._urls.zonename}
-                else:
-                    body = {"cmd0": "PutZone_OnOff/ON",
-                            "cmd1": "aspMainZone_WebUpdateStatus/",
-                            "ZoneName": self._urls.zonename}
+                body = {"cmd0": "PutZone_OnOff/ON",
+                        "cmd1": "aspMainZone_WebUpdateStatus/",
+                        "ZoneName": self._urls.zonename}
                 if self.send_post_command(self._urls.command_post, body):
                     self._power = POWER_ON
                     self._state = STATE_ON
@@ -1225,14 +1233,9 @@ class DenonAVR(object):
         try:
             if self._avr_pre2012 is True:
                 """Turn off receiver via HTTP post command."""
-                if self._zone == "Main":
-                    body = {"cmd0": "PutSystem_OnStandby/STANDBY",
-                            "cmd1": "aspMainZone_WebUpdateStatus/",
-                            "ZoneName": self._urls.zonename}
-                else:
-                    body = {"cmd0": "PutZone_OnOff/OFF",
-                            "cmd1": "aspMainZone_WebUpdateStatus/",
-                            "ZoneName": self._urls.zonename}
+                body = {"cmd0": "PutZone_OnOff/OFF",
+                        "cmd1": "aspMainZone_WebUpdateStatus/",
+                        "ZoneName": self._urls.zonename}
                 if self.send_post_command(self._urls.command_post, body):
                     self._power = POWER_STANDBY
                     self._state = STATE_OFF
