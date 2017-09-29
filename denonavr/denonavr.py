@@ -1400,6 +1400,7 @@ class DenonAVRZones(DenonAVR):
         self._favorite_func_list = self._parent_avr._favorite_func_list
         self._state = None
         self._power = None
+        self._master_power = None
         self._image_url = (STATIC_ALBUM_URL.format(host=self._host))
         self._title = None
         self._artist = None
