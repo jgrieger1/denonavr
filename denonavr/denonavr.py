@@ -1288,13 +1288,16 @@ class DenonAVR(object):
         Volume is send in a format like -50.0.
         Minimum is -80.0, maximum at 18.0
         """
+        """Round to nearest .5"""
+        volume = round(volume*2)/2
         if volume < -80 or volume > 18:
             raise ValueError("Invalid volume")
-
+        
+        str_volume = '{04.1f}'.format(volume)
         try:
             if self._avr_pre2012 is True:
                 """Set receiver volume via HTTP post command."""
-                body = {"cmd0": "PutMasterVolumeSet/" + str(volume),
+                body = {"cmd0": "PutMasterVolumeSet/" + str_volume,
                         "ZoneName": self._urls.zonename}
                 return bool(self.send_post_command(
                     self._urls.command_post, body))
